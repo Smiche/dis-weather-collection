@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 var conn *pgx.Conn
 
-func init_db_conn(conf Config) {
+func Init_db_conn(conf Config) {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", conf.Username, conf.Password, conf.Host, conf.Port, conf.Database)
 	var err error
 	conn, err = pgx.Connect(context.Background(), url)

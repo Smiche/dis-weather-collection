@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"fmt"
@@ -26,8 +26,8 @@ type Config struct {
 	Filename string `properties:",default=filename"`
 }
 
-func get_config_view(window *fyne.Window, onConnect func(conf Config)) {
-	configs, confNames := get_available_conf()
+func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
+	configs, confNames := Get_available_conf()
 
 	text1 := canvas.NewText("Select a file from the available database connection configurations.", color.Black)
 	content := container.New(layout.NewHBoxLayout(), text1)
@@ -66,7 +66,7 @@ func get_config_view(window *fyne.Window, onConnect func(conf Config)) {
 	(*window).SetContent(container.New(layout.NewVBoxLayout(), content, dropdown, errText, selectButton))
 }
 
-func get_available_conf() ([]Config, []string) {
+func Get_available_conf() ([]Config, []string) {
 	// get current working dir
 	path, err := os.Getwd()
 	if err != nil {
@@ -92,14 +92,13 @@ func get_available_conf() ([]Config, []string) {
 	configs := []Config{}
 
 	for _, confPath := range filePaths {
-		configs = append(configs, load_conf(confPath))
+		configs = append(configs, Load_conf(confPath))
 	}
 
-	fmt.Println(configs)
 	return configs, fileNames
 }
 
-func load_conf(path string) Config {
+func Load_conf(path string) Config {
 	p := properties.MustLoadFile(path, properties.UTF8)
 
 	var cfg Config
