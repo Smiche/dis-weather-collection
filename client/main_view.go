@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"image/color"
+	"image/png"
+	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -11,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/jackc/pgx/v5"
+	"github.com/wcharczuk/go-chart"
 )
 
 type Station struct {
@@ -66,9 +70,12 @@ func show_main_view(window *fyne.Window, conn *pgx.Conn) {
 	queryText.Alignment = fyne.TextAlignLeading
 	queryText.TextStyle = fyne.TextStyle{Italic: true}
 
+	localContainer := container.New(layout.NewVBoxLayout())
+	chart_plot(localContainer)
+
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Stations", container.New(layout.NewVBoxLayout(), queryText, table)),
-		container.NewTabItem("Local Query", widget.NewLabel("World!")),
+		container.NewTabItem("Local Query", localContainer),
 		container.NewTabItem("Global Query", widget.NewLabel("World!")),
 	)
 
@@ -104,4 +111,36 @@ func get_cell(name string) *canvas.Text {
 	text.Alignment = fyne.TextAlignLeading
 	text.TextStyle = fyne.TextStyle{}
 	return text
+}
+
+func chart_plot(container *fyne.Container) {
+	graph := chart.Chart{
+		XAxis: chart.XAxis{
+			Name: "Time",
+		},
+		YAxis: chart.YAxis{
+			Name: "Value",
+		},
+		Series: []chart.Series{
+			chart.ContinuousSeries{
+				XValues: []float64{1.0, 2.0, 3.0, 4.0},
+				YValues: []float64{1.0, 2.0, 3.0, 4.0},
+			},
+		},
+	}
+
+	buffer := bytes.NewBuffer([]byte{})
+	err := graph.Render(chart.PNG, buffer)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	image, err := png.Decode(bytes.NewReader(buffer.Bytes()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	canvasImage := canvas.NewImageFromImage(image)
+	canvasImage.FillMode = canvas.ImageFillOriginal
+	container.Add(canvasImage)
 }
