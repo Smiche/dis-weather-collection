@@ -13,9 +13,12 @@ create server meas_db3_fdw foreign data wrapper postgres_fdw options (
     port '5432'
 );
 
--- also need to run for each with the right credentials
-create user mapping for "dis-db-user" server meas_db2_fdw options (
-   "user" dis-db-user
+create user mapping for "dis-db-user" server meas_db1_fdw options (
+   "user" 'dis-db-user'
+);
+
+create user mapping for "dis-db-user" server meas_db3_fdw options (
+   "user" 'dis-db-user'
 );
 
 create table phenomenon_type (
@@ -215,6 +218,30 @@ create materialized view meas_min_max_day_local as
 
 create index meas_view_time_idx on meas_min_max_day_local (time);
 
+create foreign table meas_min_max_day_db1 (
+    id bigint, 
+    station_info bigint, 
+    min double precision, 
+    max double precision, 
+    avg double precision, 
+    time timestamp without time zone, 
+    phenomenon_type text, 
+    unit text
+) 
+server meas_db1_fdw options (table_name 'meas_min_max_day_local');
+
+create foreign table meas_min_max_day_db3 (
+    id bigint, 
+    station_info bigint, 
+    min double precision, 
+    max double precision, 
+    avg double precision, 
+    time timestamp without time zone, 
+    phenomenon_type text, 
+    unit text
+) 
+server meas_db3_fdw options (table_name 'meas_min_max_day_local');
+
 create materialized view station_info_all as 
     select station_all.id as id, 
         station_all.name as station, 
@@ -230,32 +257,8 @@ create materialized view station_info_all as
         and station_all.country = organization.country;
 
 create materialized view meas_min_max_day_all as
-    select distinct on (station_info_all, min, max, avg, time, phenomenon_type, unit)
-        meas_day.id as id, 
-        station_info_all.id as station_info, 
-        meas_day.min as min, 
-        meas_day.max as max, 
-        meas_day.avg as avg, 
-        meas_day.time as time, 
-        phenomenon_type.name as phenomenon_type, 
-        unit.abbreviation as unit 
-    from (
-        select id,
-            date_trunc('day', time) as time,
-            min(value) over (partition by type, unit, date_trunc('day', time)) as min,
-            max(value) over (partition by type, unit, date_trunc('day', time)) as max,
-            avg(value) over (partition by type, unit, date_trunc('day', time)) as avg,
-            device,
-            type,
-            unit,
-            country
-        from measurement_all
-    ) meas_day
-    join device_all on meas_day.device = device_all.id 
-        and meas_day.country = device_all.country
-    join station_info_all on device_all.station = station_info_all.id
-        and device_all.country = station_info_all.country
-    join phenomenon_type on meas_day.type = phenomenon_type.id
-    join unit on meas_day.unit = unit.id;
+    select *, 'Sweden' as country from meas_min_max_day_local
+    union all select *, 'Finland' as country from meas_min_max_day_db1
+    union all select *, 'Norway' as country from meas_min_max_day_db3;
 
 create index meas_all_view_time_idx on meas_min_max_day_all (time);
