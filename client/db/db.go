@@ -8,12 +8,10 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-var conn *pgx.Conn
-
-func Init_db_conn(conf Config) {
+func Init_db_conn(conf Config) *pgx.Conn {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", conf.Username, conf.Password, conf.Host, conf.Port, conf.Database)
-	var err error
-	conn, err = pgx.Connect(context.Background(), url)
+
+	conn, err := pgx.Connect(context.Background(), url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
@@ -26,9 +24,9 @@ func Init_db_conn(conf Config) {
 		os.Exit(1)
 	}
 
-	fmt.Println(greeting)
+	return conn
 }
 
-func close_db_conn() {
+func Close(conn *pgx.Conn) {
 	conn.Close(context.Background())
 }

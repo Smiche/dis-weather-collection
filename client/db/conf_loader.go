@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -18,12 +19,17 @@ import (
 )
 
 type Config struct {
-	Host     string `properties:"host"`
-	Port     int    `properties:"port,default=9000"`
-	Username string `properties:"username"`
-	Password string `properties:"password"`
-	Database string `properties:"database"`
-	Filename string `properties:",default=filename"`
+	Host         string    `properties:"host"`
+	Port         int       `properties:"port,default=9000"`
+	Username     string    `properties:"username"`
+	Password     string    `properties:"password"`
+	Database     string    `properties:"database"`
+	DeviceId     int       `properties:"device_id"`
+	PhenomenonId int       `properties:"phenomenon_id"`
+	UnitId       int       `properties:"unit_id"`
+	Filename     string    `properties:",default=filename"`
+	StartDate    time.Time `properties:"start_date,layout=2006-01-02"`
+	Period       int       `properties:"period_ms"`
 }
 
 func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {

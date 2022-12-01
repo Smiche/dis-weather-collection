@@ -15,3 +15,9 @@ VALUES ( 'south_station', 2000, 1, 'aeronautical', 22, 66, 10, 'Lappeenranta');
 
 INSERT INTO public.device_local(station, name)
 VALUES (1, 'Vaisala WXT536');
+
+INSERT INTO public.unit(name, abbreviation)
+VALUES ( 'celsius', '°C' );
+
+INSERT INTO public.phenomenon_type(name)
+VALUES ( 'temperature' );
