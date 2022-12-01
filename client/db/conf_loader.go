@@ -25,12 +25,12 @@ type Config struct {
 	Username     string    `properties:"username"`
 	Password     string    `properties:"password"`
 	Database     string    `properties:"database"`
-	DeviceId     int       `properties:"device_id"`
-	PhenomenonId int       `properties:"phenomenon_id"`
-	UnitId       int       `properties:"unit_id"`
+	DeviceId     int       `properties:"device_id,default=1"`
+	PhenomenonId int       `properties:"phenomenon_id,default=1"`
+	UnitId       int       `properties:"unit_id,default=1"`
 	Filename     string    `properties:",default=filename"`
-	StartDate    time.Time `properties:"start_date,layout=2006-01-02"`
-	Period       int       `properties:"period_ms"`
+	StartDate    time.Time `properties:"start_date,layout=2006-01-02,default=2010-10-10"`
+	Period       int       `properties:"period_ms,default=100"`
 }
 
 func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
