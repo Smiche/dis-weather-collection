@@ -18,6 +18,7 @@ import (
 	"github.com/magiconair/properties"
 )
 
+// Definition of the config properties file type.
 type Config struct {
 	Host         string    `properties:"host"`
 	Port         int       `properties:"port,default=9000"`
@@ -33,8 +34,10 @@ type Config struct {
 }
 
 func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
+	// Load available .conf files in the starting directory.
 	configs, confNames := Get_available_conf()
 
+	// Making the UI layout and elements.
 	text1 := canvas.NewText("Select a file from the available database connection configurations.", color.Black)
 	content := container.New(layout.NewHBoxLayout(), text1)
 
@@ -46,6 +49,7 @@ func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
 
 	selectedValue := ""
 	selectButton := widget.NewButton("Connect", func() {
+		// When the button is clicked, find out which config was selected and call the supplied onConnect func with the config.
 		idx := sort.Search(len(configs), func(i int) bool {
 			fmt.Println(selectedValue, configs[i].Filename)
 			return configs[i].Filename == selectedValue
@@ -66,12 +70,11 @@ func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
 		selectedValue = value
 	})
 
-	// text4 := canvas.NewText("centered", color.Black)
-	// centered := container.New(layout.NewHBoxLayout(), layout.NewSpacer(), text4, layout.NewSpacer())
-
+	// Populate the window with content. Vertical layout box and all the other elements.
 	(*window).SetContent(container.New(layout.NewVBoxLayout(), content, dropdown, errText, selectButton))
 }
 
+// Gets a list of the available .conf files in the current directory. Also parses them.
 func Get_available_conf() ([]Config, []string) {
 	// get current working dir
 	path, err := os.Getwd()
@@ -97,6 +100,7 @@ func Get_available_conf() ([]Config, []string) {
 
 	configs := []Config{}
 
+	// populate utility array that is used for the dropdown
 	for _, confPath := range filePaths {
 		configs = append(configs, Load_conf(confPath))
 	}
@@ -104,6 +108,7 @@ func Get_available_conf() ([]Config, []string) {
 	return configs, fileNames
 }
 
+// Parses a conf for given path.
 func Load_conf(path string) Config {
 	p := properties.MustLoadFile(path, properties.UTF8)
 

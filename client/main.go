@@ -8,15 +8,18 @@ import (
 	"fyne.io/fyne/v2/app"
 )
 
+// Entry point for the main client.
 func main() {
 	a := app.New()
-	w := a.NewWindow("Hello World")
+	w := a.NewWindow("WeatherDB Client")
 
+	// Load config files and once a user picks a file init db connection and switch UI.
 	db.Get_config_view(&w, func(conf db.Config) {
 		fmt.Println("Selected:", conf)
-		show_main_view(&w)
-		db.Init_db_conn(conf)
+		conn := db.Init_db_conn(conf)
+		show_main_view(&w, conn)
 	})
-	// w.Resize(fyne.NewSize(600, 480))
+
+	// start the UI
 	w.ShowAndRun()
 }
