@@ -5,13 +5,13 @@ go 1.19
 require (
 	fyne.io/fyne/v2 v2.2.4
 	github.com/magiconair/properties v1.8.5
-	github.com/wcharczuk/go-chart v2.0.1+incompatible
 )
 
 require (
-	github.com/blend/go-sdk v1.20220411.3 // indirect
+	fyne.io/x/fyne v0.0.0-20221121180555-92e65f302337 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 )
 
@@ -37,6 +37,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
+	github.com/wcharczuk/go-chart/v2 v2.1.0
 	github.com/yuin/goldmark v1.4.13 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/image v0.1.0 // indirect
