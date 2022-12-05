@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"image/color"
-	"image/png"
-	"log"
-	"time"
 
 	db "weather_client/db"
 
@@ -14,9 +10,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/widget"
 	"github.com/jackc/pgx/v5"
-	chart "github.com/wcharczuk/go-chart/v2"
 )
 
 // Handles the main view. Shown once user connects using a configuration.
@@ -60,18 +54,22 @@ func show_main_view(window *fyne.Window, conn *pgx.Conn) {
 	queryText.TextStyle = fyne.TextStyle{Italic: true}
 
 	localContainer := container.New(layout.NewVBoxLayout())
+	globalContainer := container.New(layout.NewVBoxLayout())
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Stations", container.New(layout.NewVBoxLayout(), queryText, table)),
 		container.NewTabItem("Local Query", localContainer),
-		container.NewTabItem("Global Query", widget.NewLabel("World!")),
+		container.NewTabItem("Global Query", globalContainer),
 	)
 
 	tabs.OnSelected = func(ti *container.TabItem) {
 		// Track tab switching and render
 		if ti.Text == "Local Query" {
 			localContainer.RemoveAll()
-			Local_view(localContainer, conn)
+			Local_tab(localContainer, conn)
+		} else if ti.Text == "Global Query" {
+			globalContainer.RemoveAll()
+			Global_tab(globalContainer, conn)
 		}
 	}
 
@@ -94,118 +92,4 @@ func get_cell(name string) *canvas.Text {
 	text.Alignment = fyne.TextAlignLeading
 	text.TextStyle = fyne.TextStyle{}
 	return text
-}
-
-// Draws a chart plot on the Local tab
-func Local_view(localContainer *fyne.Container, conn *pgx.Conn) {
-	curSDateLabel := widget.NewLabel("")
-	sDateButton := widget.NewButton("Start Date", func() {
-		date_picker(func(selected time.Time) {
-			curSDateLabel.SetText(selected.Format("2006-01-02"))
-		})
-	})
-
-	sDateCont := container.New(layout.NewHBoxLayout(), sDateButton, curSDateLabel)
-
-	curEDateLabel := widget.NewLabel("")
-	eDateButton := widget.NewButton("End Date", func() {
-		date_picker(func(selected time.Time) {
-			curEDateLabel.SetText(selected.Format("2006-01-02"))
-		})
-	})
-
-	eDateCont := container.New(layout.NewHBoxLayout(), eDateButton, curEDateLabel)
-
-	stations, _ := db.Get_local_stations(conn)
-	var stationNames []string
-
-	for _, station := range stations {
-		stationNames = append(stationNames, station.Name)
-	}
-
-	dropdown := widget.NewSelect(stationNames, func(value string) {
-		for _, station := range stations {
-			if station.Name == value {
-				fmt.Print("Selected:")
-			}
-		}
-	})
-
-	localContainer.Add(sDateCont)
-	localContainer.Add(eDateCont)
-	localContainer.Add(dropdown)
-
-	local_view_chart(localContainer, db.Query_local_data(conn, 1))
-}
-
-func local_view_chart(cont *fyne.Container, measurements []db.MeasurementMinMax) {
-	var xValues []time.Time
-	var yAvg []float64
-	var yMin []float64
-	var yMax []float64
-	unit := ""
-
-	// get unit from first item
-	if len(measurements) > 0 {
-		unit = measurements[0].Unit
-	}
-
-	// flatten measurements to values for the chart
-	for _, meas := range measurements {
-		xValues = append(xValues, meas.Time)
-		yAvg = append(yAvg, meas.Avg)
-		yMin = append(yMin, meas.Min)
-		yMax = append(yMax, meas.Max)
-	}
-
-	// create the chart
-	graph := chart.Chart{
-		XAxis: chart.XAxis{
-			Name: "Time",
-		},
-		YAxis: chart.YAxis{
-			Name: fmt.Sprintf("Max, Avg, Min %s", unit),
-		},
-		Series: []chart.Series{
-			chart.TimeSeries{
-				XValues: xValues,
-				YValues: yMin,
-				Style: chart.Style{
-					StrokeColor: chart.ColorGreen,
-				},
-			},
-			chart.TimeSeries{
-				XValues: xValues,
-				YValues: yMax,
-				Style: chart.Style{
-					StrokeColor: chart.ColorRed,
-				},
-			},
-			chart.TimeSeries{
-				XValues: xValues,
-				YValues: yAvg,
-				Style: chart.Style{
-					StrokeColor: chart.ColorBlue,
-				},
-			},
-		},
-	}
-
-	// Render the chart to an image buffer
-	buffer := bytes.NewBuffer([]byte{})
-	err := graph.Render(chart.PNG, buffer)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	image, err := png.Decode(bytes.NewReader(buffer.Bytes()))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Make the fyneio component from the image and add it to the screen.
-	canvasImage := canvas.NewImageFromImage(image)
-	canvasImage.FillMode = canvas.ImageFillOriginal
-	imageContainer := container.New(layout.NewCenterLayout(), canvasImage)
-	cont.Add(imageContainer)
 }
