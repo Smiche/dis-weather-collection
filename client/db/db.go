@@ -91,8 +91,11 @@ func Query_local_data(conn *pgx.Conn, station int, startTime time.Time, endTime 
 	if err != nil {
 		fmt.Println(err)
 	}
-	measurements, _ := pgx.CollectRows(rows, pgx.RowToStructByPos[MeasurementMinMax])
-	fmt.Println(measurements)
+	measurements, err := pgx.CollectRows(rows, pgx.RowToStructByPos[MeasurementMinMax])
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return measurements
 }
 
@@ -102,7 +105,6 @@ func Query_global_data(conn *pgx.Conn, station int, startTime time.Time, endTime
 		fmt.Println(err)
 	}
 
-	//printRows(rows)
 	measurements, err := pgx.CollectRows(rows, pgx.RowToStructByPos[MeasurementMinMaxGlobal])
 	if err != nil {
 		log.Fatal(err)
