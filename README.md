@@ -25,7 +25,7 @@ The overall schema generally follows the original design document, however, ther
 
 - For performance reasons there are also material views aggregating the measurement data for each day and accessing relevant station information related to that aggregated data. There is a local "station_info" and "meas_min_max_day" material view in each of the databases. For replicating the material views globally, the "meas_min_max_day" material views of the other databases are added as foreign tables. These foreign tables are then combined with the local one using unions to create an overall materialized view for the "meas_min_max_day" data. Even though having the data of the other databases as foreign tables means that they wouldn't be saved locally, combining all the data again in another materialized view ensures that it is saved anyway. As with the normal views, the "country" value is inserted for globally unique identification. The materialized view for the "station_info" is queried from the other locally accessible views combining all data instead of foreign tables. The reason for using foreign tables for the "meas_min_max_day" data is that then only the aggregated data needs to be sent over the network and not all measurement data. 
 
-- The pg_cron extension is used for periodically refreshing all the material views. All of the view are set to refresh every minute, set with a query like `select cron.schedule('* * * * *', $$refresh materialized view meas_min_max_day_local$$);`
+- The pg_cron extension is used for periodically refreshing all the material views. All of the view are set to refresh every minute, set with a query like `select cron.schedule('* * * * *', $$refresh materialized view concurrently meas_min_max_day_local$$);`
 
 
 #### Clients

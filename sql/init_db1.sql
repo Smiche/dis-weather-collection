@@ -273,3 +273,17 @@ create materialized view meas_min_max_day_all as
 create index meas_all_view_time_idx on meas_min_max_day_all (time);
 
 create extension pg_cron;
+
+-- create unique indexes for materialized views, needed for concurrent refresh
+
+create unique index station_info_unique_idx on station_info_local (id);
+create unique index station_info_all_unique_idx on station_info_all (id, country);
+create unique index meas_view_unique_idx on meas_min_max_day_local (id);
+create unique index meas_view_all_unique_idx on meas_min_max_day_all (id, country);
+
+-- refresh materialized views every minute, concurrently to not block selects
+
+select cron.schedule('* * * * *', $$refresh materialized view concurrently station_info_local$$);
+select cron.schedule('* * * * *', $$refresh materialized view concurrently meas_min_max_day_local$$);
+select cron.schedule('* * * * *', $$refresh materialized view concurrently station_info_all$$);
+select cron.schedule('* * * * *', $$refresh materialized view concurrently meas_min_max_day_all$$);
