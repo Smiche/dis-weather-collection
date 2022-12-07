@@ -275,3 +275,5 @@ create materialized view meas_min_max_day_all as
     union all select *, 'Finland' as country from meas_min_max_day_db1;
 
 create index meas_all_view_time_idx on meas_min_max_day_all (time);
+
+create extension pg_cron;

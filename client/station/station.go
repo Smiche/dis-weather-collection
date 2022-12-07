@@ -42,7 +42,9 @@ func begin_simulation(window *fyne.Window, conn *pgx.Conn, conf db.Config) {
 
 	currentValueLabel := widget.NewLabel("Value: 0")
 	totalSentLabel := widget.NewLabel("Total sent: 0")
-	measContainer := container.New(layout.NewHBoxLayout(), currentValueLabel, totalSentLabel)
+	dateLabel := widget.NewLabel("Measurement date: ")
+
+	measContainer := container.New(layout.NewHBoxLayout(), currentValueLabel, totalSentLabel, dateLabel)
 
 	var stopButton *widget.Button
 	stopButton = widget.NewButton("Stop", func() {
@@ -54,7 +56,7 @@ func begin_simulation(window *fyne.Window, conn *pgx.Conn, conf db.Config) {
 	(*window).SetContent(container.New(layout.NewVBoxLayout(), connInfoLabel, measContainer, stopButton))
 
 	// subroutine that executes an insert query every conf.Period milliseconds
-	go func(curValueLabel *widget.Label, totValueLabel *widget.Label, dbConn *pgx.Conn, done chan bool) {
+	go func(curValueLabel *widget.Label, totValueLabel *widget.Label, dtLabel *widget.Label, dbConn *pgx.Conn, done chan bool) {
 		// use MS duration specified in conf as a period
 		duration := time.Millisecond * time.Duration(conf.Period)
 		ticker := time.NewTicker(duration)
@@ -71,8 +73,8 @@ func begin_simulation(window *fyne.Window, conn *pgx.Conn, conf db.Config) {
 			case <-ticker.C:
 				// random value 5-30
 				val := rand.Float32()*25 + 5
-				// Keep moving time by 1 second for every insert.
-				valTime := conf.StartDate.Add(time.Duration(count) * time.Second)
+				// Keep moving time by count * conf.PeriodStep for every insert.
+				valTime := conf.StartDate.Add(time.Duration(count*conf.PeriodStep) * time.Second)
 				// Execute insert query.
 				_, err := dbConn.Exec(context.Background(), "insert into measurement_local( device, value, \"time\", type, unit) values ($1, $2, $3, $4, $5) ", conf.DeviceId, val, valTime, conf.PhenomenonId, conf.UnitId)
 				if err != nil {
@@ -82,7 +84,8 @@ func begin_simulation(window *fyne.Window, conn *pgx.Conn, conf db.Config) {
 				count++
 				currentValueLabel.SetText(fmt.Sprintf("Value: %f", val))
 				totalSentLabel.SetText(fmt.Sprintf("Total sent: %d", count))
+				dateLabel.SetText(fmt.Sprintf("Measurement date: %s", valTime.Format("20060102150405")))
 			}
 		}
-	}(currentValueLabel, totalSentLabel, conn, done)
+	}(currentValueLabel, totalSentLabel, dateLabel, conn, done)
 }

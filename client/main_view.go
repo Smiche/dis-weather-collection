@@ -1,38 +1,21 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"image/color"
-	"image/png"
-	"log"
+
+	db "weather_client/db"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/widget"
 	"github.com/jackc/pgx/v5"
-	"github.com/wcharczuk/go-chart"
 )
-
-type Station struct {
-	ID             int32
-	Name           string
-	Number         int32
-	OrganizationId int32
-	Type           string
-	Latitude       float32
-	Longitude      float32
-	Altitude       float32
-	City           string
-	Country        string
-}
 
 // Handles the main view. Shown once user connects using a configuration.
 func show_main_view(window *fyne.Window, conn *pgx.Conn) {
-	stations, err := get_stations(conn)
+	stations, err := db.Get_stations(conn)
 	if err != nil {
 		return
 	}
@@ -71,30 +54,28 @@ func show_main_view(window *fyne.Window, conn *pgx.Conn) {
 	queryText.TextStyle = fyne.TextStyle{Italic: true}
 
 	localContainer := container.New(layout.NewVBoxLayout())
-	chart_plot(localContainer)
+	globalContainer := container.New(layout.NewVBoxLayout())
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Stations", container.New(layout.NewVBoxLayout(), queryText, table)),
 		container.NewTabItem("Local Query", localContainer),
-		container.NewTabItem("Global Query", widget.NewLabel("World!")),
+		container.NewTabItem("Global Query", globalContainer),
 	)
 
-	//tabs.Append(container.NewTabItemWithIcon("Home", theme.HomeIcon(), widget.NewLabel("Home tab")))
+	tabs.OnSelected = func(ti *container.TabItem) {
+		// Track tab switching and render
+		if ti.Text == "Local Query" {
+			localContainer.RemoveAll()
+			Local_tab(localContainer, conn)
+		} else if ti.Text == "Global Query" {
+			globalContainer.RemoveAll()
+			Global_tab(globalContainer, conn)
+		}
+	}
 
 	tabs.SetTabLocation(container.TabLocationTop)
 
 	(*window).SetContent(tabs)
-}
-
-func get_stations(conn *pgx.Conn) ([]Station, error) {
-	rows, err := conn.Query(context.Background(), "select * from station_all")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	stations, err := pgx.CollectRows(rows, pgx.RowToStructByPos[Station])
-	fmt.Println(stations)
-	return stations, err
 }
 
 // generates a canvas.Text with header style
@@ -111,36 +92,4 @@ func get_cell(name string) *canvas.Text {
 	text.Alignment = fyne.TextAlignLeading
 	text.TextStyle = fyne.TextStyle{}
 	return text
-}
-
-func chart_plot(container *fyne.Container) {
-	graph := chart.Chart{
-		XAxis: chart.XAxis{
-			Name: "Time",
-		},
-		YAxis: chart.YAxis{
-			Name: "Value",
-		},
-		Series: []chart.Series{
-			chart.ContinuousSeries{
-				XValues: []float64{1.0, 2.0, 3.0, 4.0},
-				YValues: []float64{1.0, 2.0, 3.0, 4.0},
-			},
-		},
-	}
-
-	buffer := bytes.NewBuffer([]byte{})
-	err := graph.Render(chart.PNG, buffer)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	image, err := png.Decode(bytes.NewReader(buffer.Bytes()))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	canvasImage := canvas.NewImageFromImage(image)
-	canvasImage.FillMode = canvas.ImageFillOriginal
-	container.Add(canvasImage)
 }

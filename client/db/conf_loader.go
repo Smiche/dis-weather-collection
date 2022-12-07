@@ -31,6 +31,7 @@ type Config struct {
 	Filename     string    `properties:",default=filename"`
 	StartDate    time.Time `properties:"start_date,layout=2006-01-02,default=2010-10-10"`
 	Period       int       `properties:"period_ms,default=100"`
+	PeriodStep   int       `properties:"period_step_s,default=1"`
 }
 
 func Get_config_view(window *fyne.Window, onConnect func(conf Config)) {
