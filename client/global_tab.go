@@ -78,6 +78,11 @@ func Global_tab(globalContainer *fyne.Container, conn *pgx.Conn) {
 			global_view_chart(imageContainer, measurements)
 		} else {
 			imageContainer.Hide()
+			if len(measurements) == 1 {
+				noResultsLabel.SetText("Only a single result found, need a minimum of 2.")
+			} else {
+				noResultsLabel.SetText("No results found for the query.")
+			}
 			noResultsLabel.Show()
 		}
 	})

@@ -72,12 +72,17 @@ func Local_tab(localContainer *fyne.Container, conn *pgx.Conn) {
 
 	queryButton := widget.NewButton("Query", func() {
 		measurements := db.Query_local_data(conn, selectedStation, startTime, endTime)
-		if len(measurements) > 0 {
+		if len(measurements) > 1 {
 			noResultsLabel.Hide()
 			imageContainer.Show()
 			local_view_chart(imageContainer, measurements)
 		} else {
 			imageContainer.Hide()
+			if len(measurements) == 1 {
+				noResultsLabel.SetText("Only a single result found, need a minimum of 2.")
+			} else {
+				noResultsLabel.SetText("No results found for the query.")
+			}
 			noResultsLabel.Show()
 		}
 	})
