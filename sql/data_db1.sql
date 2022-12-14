@@ -21,3 +21,9 @@ VALUES ( 'celsius', '°C' );
 
 INSERT INTO public.phenomenon_type(name)
 VALUES ( 'temperature' );
+
+INSERT INTO public.unit(name, abbreviation)
+VALUES ( 'meters per second', 'm/s' );
+
+INSERT INTO public.phenomenon_type(name)
+VALUES ( 'wind speed' );
