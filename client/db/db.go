@@ -99,8 +99,8 @@ func Query_local_data(conn *pgx.Conn, station int, startTime time.Time, endTime 
 	return measurements
 }
 
-func Query_global_data(conn *pgx.Conn, station int, startTime time.Time, endTime time.Time) []MeasurementMinMaxGlobal {
-	rows, err := conn.Query(context.Background(), "select * from meas_min_max_day_all where station_info=$1 and time >= $2 and time <= $3 order by time ASC", station, startTime, endTime)
+func Query_global_data(conn *pgx.Conn, station GlobalStation, startTime time.Time, endTime time.Time) []MeasurementMinMaxGlobal {
+	rows, err := conn.Query(context.Background(), "select * from meas_min_max_day_all where station_info=$1 and country =$2 and time >= $3 and time <= $4 order by time ASC", station.ID, station.Country, startTime, endTime)
 	if err != nil {
 		fmt.Println(err)
 	}

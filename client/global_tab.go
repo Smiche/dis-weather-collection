@@ -22,7 +22,7 @@ import (
 func Global_tab(globalContainer *fyne.Container, conn *pgx.Conn) {
 	var startTime time.Time
 	var endTime time.Time
-	var selectedStation int
+	var selectedStation db.GlobalStation
 
 	// label, button and container for start time picker
 	curSDateLabel := widget.NewLabel("")
@@ -55,7 +55,7 @@ func Global_tab(globalContainer *fyne.Container, conn *pgx.Conn) {
 	dropdown := widget.NewSelect(stationNames, func(value string) {
 		for _, station := range stations {
 			if station.Name == value {
-				selectedStation = int(station.ID)
+				selectedStation = station
 			}
 		}
 	})
@@ -88,7 +88,7 @@ func Global_tab(globalContainer *fyne.Container, conn *pgx.Conn) {
 	})
 
 	// label that shows the query
-	queryText := canvas.NewText("Query: select * from meas_min_max_day_all where station_info=$1 and time >= $2 and time <= $3 order by time ASC", color.Black)
+	queryText := canvas.NewText("Query: select * from meas_min_max_day_all where station_info=$1 and country=$2 and time >= $3 and time <= $4 order by time ASC", color.Black)
 	queryText.TextStyle = fyne.TextStyle{Italic: true}
 	queryText.Alignment = fyne.TextAlignLeading
 
