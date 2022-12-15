@@ -72,7 +72,7 @@ func Global_tab(globalContainer *fyne.Container, conn *pgx.Conn) {
 
 	queryButton := widget.NewButton("Query", func() {
 		measurements := db.Query_global_data(conn, selectedStation, startTime, endTime)
-		if len(measurements) > 0 {
+		if len(measurements) > 1 {
 			noResultsLabel.Hide()
 			imageContainer.Show()
 			global_view_chart(imageContainer, measurements)
